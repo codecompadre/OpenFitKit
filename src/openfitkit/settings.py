@@ -20,12 +20,20 @@ class Settings:
     port: int = 8766
 
     def __post_init__(self) -> None:
-        if self.provider not in {"demo", "openai", "openrouter"}:
-            raise ValueError("OPENFITKIT_PROVIDER must be demo, openai, or openrouter.")
+        if self.provider == "openai":
+            raise ValueError(
+                "Direct OpenAI routing is no longer supported. Set OPENFITKIT_PROVIDER=openrouter, "
+                "OPENFITKIT_MODEL=vendor/model, and OPENROUTER_API_KEY."
+            )
+        if self.provider not in {"demo", "openrouter"}:
+            raise ValueError("OPENFITKIT_PROVIDER must be demo or openrouter.")
         if not isinstance(self.port, int) or isinstance(self.port, bool) or not 1 <= self.port <= 65535:
             raise ValueError("OPENFITKIT_PORT must be an integer from 1 to 65535.")
-        if self.provider != "demo" and self.model and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,179}", self.model):
-            raise ValueError("OPENFITKIT_MODEL must be a model ID of at most 180 characters.")
+        if self.provider == "openrouter" and (
+            not isinstance(self.model, str) or len(self.model) > 180
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*(?::[A-Za-z0-9][A-Za-z0-9._-]*)?", self.model)
+        ):
+            raise ValueError("OpenRouter requires OPENFITKIT_MODEL as a vendor/model ID of at most 180 characters.")
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -36,8 +44,11 @@ class Settings:
             raise ValueError("OPENFITKIT_PORT must be an integer from 1 to 65535.") from None
         return cls(
             provider=provider,
-            model=os.environ.get("OPENFITKIT_MODEL", "").strip() if provider != "demo" else "",
-            api_key=os.environ.get("OPENFITKIT_API_KEY", "").strip(),
+            model=os.environ.get("OPENFITKIT_MODEL", "").strip() if provider == "openrouter" else "",
+            api_key=(
+                os.environ.get("OPENROUTER_API_KEY", "").strip()
+                or os.environ.get("OPENFITKIT_API_KEY", "").strip()
+            ) if provider == "openrouter" else "",
             data_dir=Path(os.environ.get("OPENFITKIT_DATA_DIR") or _data_dir()).expanduser(),
             port=port,
         )

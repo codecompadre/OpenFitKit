@@ -6,7 +6,7 @@ OpenFitKit gives you a working path from browser input to a coaching response an
 
 Edit `src/openfitkit/prompts.py`. For example, a walking and strength companion might emphasize consistent movement, simple sessions, and gradual progression. A recovery-focused app might emphasize sleep routines, manageable activity, and habit reflection.
 
-Keep the general fitness and healthy lifestyle focus, the distinction between coaching and medical treatment, and honest claims about available tools. A prompt alone does not validate generated advice; review behavior using representative user scenarios before offering a live app to others.
+Keep the general fitness and healthy lifestyle focus, the distinction between coaching and medical treatment, and honest claims about available tools. `FOCUS_GUIDANCE` adds trusted guidance for movement, strength, fueling, recovery, and habits. `ChatRequest.focus` validates the selection; the profile and conversation cannot replace this contract. `scope.py` conservatively redirects some clearly unrelated requests before a paid call and normalizes the model's refusal marker. It deliberately allows ambiguous follow-ups to reach the coach for clarification. A prompt and a small local guard do not validate generated advice; review behavior using representative user scenarios before offering a live app to others.
 
 ## 2. Extend the profile
 
@@ -38,7 +38,9 @@ class MyProvider:
         ...
 ```
 
-The service builds context and stores the completed exchange. The provider translates that request to your chosen API. Keep keys on the server, preserve TLS verification, convert provider failures into safe `ProviderError` messages, and decide explicitly how usage and retries work.
+The service builds context and stores the completed exchange. The included `OpenRouterProvider` sends one request to OpenRouter using the selected model, with no automatic retry. Configure it through `OPENFITKIT_PROVIDER=openrouter`, `OPENFITKIT_MODEL=publisher/model`, and `OPENROUTER_API_KEY`. Direct OpenAI routing is no longer included; separate OpenAI/Gemini keys are unnecessary for this adapter. The offline demonstration remains the default.
+
+Your own provider translates that request to your chosen API. Keep keys on the server, preserve TLS verification, convert provider failures into safe `ProviderError` messages, and decide explicitly how usage and retries work.
 
 You can add a provider choice in `settings.py` and `build_provider()`, or inject a provider into `create_app(settings, provider=...)`. The [custom-provider example](../examples/custom_provider.py) uses injection and stays offline:
 
@@ -58,7 +60,7 @@ The UI consists of three files, with no JavaScript build step:
 
 Replies render as plain text with preserved line breaks. If you add Markdown, use a maintained renderer with HTML disabled and safe link handling. Keep untrusted user/model text out of `innerHTML`. When replacing this UI with a framework, keep the HTTP contract or adjust `app.py` alongside it.
 
-The initial design is a neutral example. Rename it, change the layout, and add the workflows your users need.
+The initial design starts with five fitness focus cards and an editable request, then supports conversational refinements. Choosing a card prepares the request without sending it. Requests include a validated `focus`; older API clients can omit it for general fitness guidance. Saved guidance, the profile, and confirmed data resets remain available from the header. Rename the starter, change the layout, and add the workflows your users need.
 
 ## 5. Build a feature through the boundaries
 

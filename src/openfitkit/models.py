@@ -53,6 +53,7 @@ class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     conversation_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    focus: Literal["general", "movement", "strength", "fueling", "recovery", "habits"] = "general"
     message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
 
     @field_validator("message")

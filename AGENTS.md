@@ -5,6 +5,11 @@ apps. Preserve its general fitness focus: movement, strength, aerobic fitness,
 mobility, everyday fueling, sleep, recovery, and sustainable habits. The shared
 coaching contract is in `src/openfitkit/prompts.py`.
 
+The shipped live adapter uses OpenRouter and one selected model per coaching turn.
+Keep provider credentials on the server. The UI starts with fitness focus cards;
+choosing a card prepares an editable request and must not send it automatically.
+Preserve the validated focus and fitness scope through conversational follow-ups.
+
 Keep the starter easy to understand. Favor a small working example and clear
 extension points over copying a full application. Domain-specific programming,
 multi-coach workflows, document retrieval, authentication, and public deployment

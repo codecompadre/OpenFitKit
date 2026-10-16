@@ -35,34 +35,32 @@ class DemoProvider:
         )
 
 
-class OpenAICompatibleProvider:
-    """A minimal adapter for two fixed endpoints; no automatic paid retries."""
+class OpenRouterProvider:
+    """One fixed OpenRouter gateway; no automatic paid retries."""
 
-    ENDPOINTS = {
-        "openai": "https://api.openai.com/v1/chat/completions",
-        "openrouter": "https://openrouter.ai/api/v1/chat/completions",
-    }
+    ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 
     def __init__(self, settings: Settings, *, client: httpx.Client | None = None):
-        if settings.provider not in self.ENDPOINTS:
-            raise ValueError("Choose openai or openrouter for the live provider.")
-        if not settings.model or not settings.api_key.strip():
-            raise ValueError("Live coaching requires OPENFITKIT_MODEL and OPENFITKIT_API_KEY.")
-        self.name, self.model = settings.provider, settings.model
-        self._api_key = settings.api_key
+        if settings.provider != "openrouter":
+            raise ValueError("Choose OPENFITKIT_PROVIDER=openrouter for live coaching.")
+        api_key = settings.api_key.strip()
+        if not api_key or any(ord(char) < 33 or ord(char) > 126 for char in api_key):
+            raise ValueError("OpenRouter requires a valid OPENROUTER_API_KEY (or legacy OPENFITKIT_API_KEY).")
+        self.name, self.model = "openrouter", settings.model
+        self._api_key = api_key
         self._client = client
 
     def generate(self, *, instructions: str, messages: list[dict[str, str]]) -> str:
         payload = {
             "model": self.model,
             "messages": [{"role": "system", "content": instructions}, *messages],
-            "max_completion_tokens" if self.name == "openai" else "max_tokens": 1200,
+            "max_tokens": 1200,
         }
         try:
             if self._client is not None:
                 response = self._request(self._client, payload)
             else:
-                with httpx.Client(timeout=60, follow_redirects=False) as client:
+                with httpx.Client(timeout=60, follow_redirects=False, verify=True) as client:
                     response = self._request(client, payload)
         except httpx.TimeoutException:
             raise ProviderError("The AI request timed out. No automatic retry was made.") from None
@@ -85,7 +83,7 @@ class OpenAICompatibleProvider:
 
     def _request(self, client: httpx.Client, payload: dict) -> httpx.Response:
         return client.post(
-            self.ENDPOINTS[self.name],
+            self.ENDPOINT,
             headers={"Authorization": f"Bearer {self._api_key}"},
             json=payload,
             timeout=60,
@@ -94,4 +92,4 @@ class OpenAICompatibleProvider:
 
 
 def build_provider(settings: Settings) -> Provider:
-    return DemoProvider() if settings.provider == "demo" else OpenAICompatibleProvider(settings)
+    return DemoProvider() if settings.provider == "demo" else OpenRouterProvider(settings)

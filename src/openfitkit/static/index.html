@@ -4,68 +4,98 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="openfitkit-token" content="{{CSRF_TOKEN}}">
-  <title>OpenFitKit</title>
+  <title>OpenFitKit · Your next healthy step</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
-  <aside aria-label="Conversations and settings">
-    <a class="brand" href="/">OpenFitKit</a>
-    <p class="muted">Fitness &amp; healthy habits</p>
-    <button id="new-chat" type="button">+ New conversation</button>
-    <h2 class="small-heading">Conversations</h2>
-    <nav id="history" aria-label="Saved conversations"></nav>
-    <div class="sidebar-actions">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="OpenFitKit home"><span class="brand-mark" aria-hidden="true">of</span>OpenFitKit</a>
+    <nav class="top-actions" aria-label="Your fitness space">
       <button id="profile-button" type="button">Your profile</button>
-      <button id="memory-button" type="button">Local memory</button>
-    </div>
-  </aside>
+      <button id="history-button" type="button">Saved guidance</button>
+      <button id="memory-button" type="button">Your data</button>
+    </nav>
+  </header>
   <main>
-    <header><h1 id="conversation-title">New conversation</h1><span id="mode" class="badge">Loading…</span></header>
-    <p id="connection-note" class="notice"></p>
-    <div id="messages" role="log" aria-label="Conversation" aria-live="polite" tabindex="0">
-      <section id="welcome">
-        <p class="eyebrow">Starter UI · customize this</p>
-        <h2>Build your next healthy habit.</h2>
-        <p>A starting point for everyday movement, strength, recovery, and fueling.</p>
-        <div class="suggestions">
-          <button type="button" data-suggestion="Help me build a consistent movement habit.">Move consistently</button>
-          <button type="button" data-suggestion="Help me start a manageable strength routine.">Build strength</button>
-          <button type="button" data-suggestion="Help me choose one healthy habit to work on this week.">Start a healthy habit</button>
+    <section class="welcome" aria-labelledby="welcome-title">
+      <div>
+        <p class="eyebrow">Small steps. A healthier everyday.</p>
+        <h1 id="welcome-title">Make room for<br><span>feeling better.</span></h1>
+        <p class="intro">A little movement. A manageable routine. A next step that fits your life. Start with what matters to you today.</p>
+      </div>
+      <aside class="profile-summary" aria-labelledby="profile-summary-title">
+        <span class="small-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span>
+        <h2 id="profile-summary-title">Built around you</h2>
+        <p id="profile-summary">Add your goals, available time and equipment to help shape your guidance.</p>
+        <button id="summary-profile-button" type="button" class="text-button">Personalize your profile <span aria-hidden="true">→</span></button>
+      </aside>
+    </section>
+    <section class="focus-section" aria-labelledby="focus-heading">
+      <div class="section-heading"><h2 id="focus-heading">What would help today?</h2><p>Choose a starting point, then make it yours.</p></div>
+      <div class="focus-grid">
+        <button type="button" class="focus-card" data-focus="movement" aria-pressed="false"><span class="focus-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span><strong>Move more</strong><span>Find movement that fits.</span></button>
+        <button type="button" class="focus-card" data-focus="strength" aria-pressed="false"><span class="focus-icon" aria-hidden="true">＋</span><strong>Build strength</strong><span>Start with a doable routine.</span></button>
+        <button type="button" class="focus-card" data-focus="fueling" aria-pressed="false"><span class="focus-icon" aria-hidden="true">◔</span><strong>Fuel your day</strong><span>Support your activity with food.</span></button>
+        <button type="button" class="focus-card" data-focus="recovery" aria-pressed="false"><span class="focus-icon" aria-hidden="true">☾</span><strong>Recover well</strong><span>Make space for rest and mobility.</span></button>
+        <button type="button" class="focus-card" data-focus="habits" aria-pressed="false"><span class="focus-icon" aria-hidden="true">✓</span><strong>Build consistency</strong><span>Turn small steps into habits.</span></button>
+      </div>
+    </section>
+    <div class="workspace">
+      <section class="brief-panel" aria-labelledby="brief-title">
+        <div class="panel-kicker"><span class="step-number">1</span><span id="focus-label">Your fitness goal</span></div>
+        <h2 id="brief-title">Plan a small next step</h2>
+        <p id="brief-help" class="muted">Share what you want to work on. Include anything that would make it easier to get started.</p>
+        <form id="composer">
+          <label for="message" id="message-label">What would you like help with?</label>
+          <textarea id="message" rows="6" placeholder="I'd like to feel stronger, but I'm not sure where to start…" required></textarea>
+          <label for="available-time">Time available today <span class="optional">optional</span></label>
+          <select id="available-time"><option value="">Use my request or profile</option><option value="10">10 minutes</option><option value="20">20 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select>
+          <p id="input-note" class="input-note">Enter to send · Shift+Enter for a new line</p>
+          <button id="send" class="primary" type="submit" disabled>Get guidance <span aria-hidden="true">→</span></button>
+        </form>
+        <p id="error" role="alert"></p>
+        <p id="status" class="status" role="status"></p>
+        <p class="scope-note">Here for movement, strength, everyday fueling, recovery and sustainable habits.</p>
+      </section>
+      <section class="guidance-panel" aria-labelledby="conversation-title" aria-busy="false">
+        <div class="guidance-header"><div><div class="panel-kicker"><span class="step-number">2</span>Your next step</div><h2 id="conversation-title">A practical place to begin</h2></div><button id="new-chat" type="button" class="text-button">Start fresh <span aria-hidden="true">＋</span></button></div>
+        <div id="messages" role="log" aria-label="Fitness guidance" aria-live="polite" tabindex="0">
+          <div id="welcome" class="guidance-empty"><span class="empty-symbol" aria-hidden="true">✳</span><h3>Start small. Make it yours.</h3><p>Choose a focus and describe your goal. Your guidance will appear here, with room to ask questions and adjust it together.</p><p class="muted">No perfect starting point needed.</p></div>
         </div>
-        <p class="muted">New conversations use your profile, without including other conversations.</p>
+        <details id="previous-guidance" hidden><summary>Earlier steps in this conversation</summary><div id="earlier-messages"></div></details>
       </section>
     </div>
-    <form id="composer">
-      <label for="message">Your message</label>
-      <textarea id="message" rows="3" placeholder="Share a goal or ask a fitness question…" required></textarea>
-      <div class="composer-footer"><span id="input-note" class="muted">Enter to send · Shift+Enter for a new line</span><button id="send" type="submit" disabled>Send</button></div>
-    </form>
-    <p id="error" role="alert"></p>
-    <p id="status" class="muted" role="status"></p>
-    <footer>General fitness guidance. Share only the personal details you want sent to your configured AI provider.</footer>
+    <footer><span id="mode" class="badge">Loading…</span><p id="connection-note">Checking your local setup…</p><p>General fitness guidance, not medical care. Share only details you want sent to your configured provider.</p></footer>
   </main>
+  <dialog id="history-dialog" aria-labelledby="history-title">
+    <div class="dialog-heading"><h2 id="history-title">Your saved guidance</h2><button type="button" data-close aria-label="Close saved guidance">Close</button></div>
+    <p>Pick up a previous conversation. Starting fresh keeps these saved and uses your current profile.</p>
+    <nav id="history" aria-label="Saved conversations"></nav>
+    <p class="dialog-error" role="alert"></p>
+  </dialog>
   <dialog id="profile-dialog" aria-labelledby="profile-title">
     <form id="profile-form">
-      <h2 id="profile-title">Your profile</h2>
-      <p>Applied to new messages, including in existing conversations. Optional details can stay blank.</p>
+      <h2 id="profile-title">Make it work for you</h2>
+      <p>Your current profile informs each new request. Add only what you want to share; optional details can stay blank.</p>
       <label>Name<input name="name" maxlength="80" required></label>
-      <label>Goals<textarea name="goals" maxlength="2000" rows="2"></textarea></label>
+      <label>What are you working toward?<textarea name="goals" maxlength="2000" rows="2"></textarea></label>
       <label>Experience<select name="experience"><option value="unspecified">Not specified</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="experienced">Experienced</option></select></label>
       <div class="field-pair"><label>Days per week<input name="days_per_week" type="number" min="1" max="7" step="1"></label><label>Minutes per session<input name="minutes_per_session" type="number" min="5" max="180" step="1"></label></div>
       <label>Equipment<textarea name="equipment" maxlength="2000" rows="2"></textarea></label>
       <label>Limitations or accessibility needs<textarea name="limitations" maxlength="2000" rows="2"></textarea></label>
       <label>Dietary preferences<textarea name="dietary_preferences" maxlength="2000" rows="2"></textarea></label>
       <p class="dialog-error" role="alert"></p>
-      <div class="dialog-actions"><button type="button" data-close>Cancel</button><button type="submit">Save profile</button></div>
+      <div class="dialog-actions"><button type="button" data-close>Cancel</button><button type="submit" class="primary">Save profile</button></div>
     </form>
   </dialog>
   <dialog id="memory-dialog" aria-labelledby="memory-title">
     <form id="memory-form">
-      <h2 id="memory-title">Local memory</h2>
+      <h2 id="memory-title">Your data, your fresh start</h2>
       <p id="memory-count"></p>
-      <p>Only this conversation and your current profile are sent as context. Models are not trained by saving conversations here.</p>
-      <button id="memory-new-chat" type="button">Start a new conversation · keep saved data</button>
+      <p id="provider-detail"></p>
+      <p>Guidance uses your current profile and a recent portion of this conversation. Other conversations are not included. Saving here does not train the model.</p>
+      <button id="memory-new-chat" type="button">Start fresh · keep profile and saved guidance</button>
       <fieldset><legend>Delete local data</legend><label class="choice"><input type="radio" name="scope" value="history" checked>Clear conversations · keep profile</label><label class="choice"><input type="radio" name="scope" value="all">Clear all local data · also reset profile</label></fieldset>
       <p>Deletion cannot be undone. Provider records and API keys are unaffected.</p>
       <label>Type RESET to confirm<input id="reset-confirmation" autocomplete="off" spellcheck="false"></label>

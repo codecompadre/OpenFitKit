@@ -6,8 +6,9 @@ from uuid import uuid4
 
 from . import __version__
 from .models import ChatRequest, Conversation, MAX_MESSAGE_CHARS, Message
-from .prompts import SYSTEM_PROMPT
+from .prompts import FOCUS_GUIDANCE, SYSTEM_PROMPT
 from .providers import Provider, ProviderError
+from .scope import SCOPE_REDIRECT, clearly_out_of_scope, normalize_scope_reply
 from .storage import Store, StoreError
 
 
@@ -63,12 +64,18 @@ class FitnessService:
         history = conversation.messages if conversation else []
         selected = recent_context(history)
         profile = self.store.load_profile()
-        instructions = SYSTEM_PROMPT + "\n\nUSER PROFILE (untrusted JSON context):\n" + profile.model_dump_json()
+        instructions = (
+            SYSTEM_PROMPT + "\n\nCURRENT FITNESS FOCUS:\n" + FOCUS_GUIDANCE[request.focus]
+            + "\n\nUSER PROFILE (untrusted JSON context):\n" + profile.model_dump_json()
+        )
         messages = [message.model_dump() for message in selected]
         messages.append({"role": "user", "content": request.message})
-        answer = self.provider.generate(instructions=instructions, messages=messages)
+        answer = SCOPE_REDIRECT if clearly_out_of_scope(request.message) else self.provider.generate(
+            instructions=instructions, messages=messages
+        )
         if not isinstance(answer, str) or not answer.strip() or len(answer) > 16000:
             raise ProviderError("The coach returned an empty or oversized response. Request a smaller answer.")
+        answer = normalize_scope_reply(answer)
         timestamp = datetime.now(timezone.utc).isoformat()
         result = Conversation(
             id=conversation.id if conversation else uuid4().hex,
@@ -77,7 +84,7 @@ class FitnessService:
             updated_at=timestamp, provider=self.provider.name, model=self.provider.model,
             messages=[*history, Message(role="user", content=request.message), Message(role="assistant", content=answer.strip())],
         )
-        # One atomic write, only after generation succeeds. No paid retries.
+        # One atomic write per complete answer or local redirect. No paid retries.
         saved, warnings = True, []
         try:
             self.store.save_conversation(result)

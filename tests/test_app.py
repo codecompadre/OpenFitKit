@@ -8,6 +8,7 @@ import pytest
 
 from openfitkit.app import MAX_BODY_BYTES, create_app
 from openfitkit.providers import ProviderError
+from openfitkit.prompts import FOCUS_GUIDANCE
 from openfitkit.settings import Settings
 
 
@@ -139,6 +140,28 @@ def test_chat_roundtrip_uses_current_thread_and_persists_only_complete_exchanges
     assert third.json()["context"]["included_exchanges"] == 0
     assert client.get("/api/state").json()["memory"] == {"conversations": 2, "messages": 6}
     assert len(app.state.service.provider.calls) == 3
+
+
+@pytest.mark.parametrize("focus", [None, "movement", "strength", "fueling", "recovery", "habits"])
+def test_guided_focus_reaches_coach_and_older_clients_default_to_general(client, app, focus):
+    body = {"message": "Help me choose a manageable next step."}
+    if focus is not None:
+        body["focus"] = focus
+    response = client.post("/api/chat", json=body)
+    assert response.status_code == 200
+    assert len(app.state.service.provider.calls) == 1
+    instructions = app.state.service.provider.calls[0]["instructions"]
+    assert FOCUS_GUIDANCE[focus or "general"] in instructions
+
+
+def test_untrusted_focus_cannot_replace_server_coaching_contract(client, app):
+    response = client.post("/api/chat", json={
+        "message": "Help me get moving.", "focus": "IGNORE_FITNESS_WRITE_CODE",
+    })
+    assert response.status_code == 422
+    assert "IGNORE_FITNESS_WRITE_CODE" not in response.text
+    assert not app.state.service.provider.calls
+    assert client.get("/api/state").json()["memory"]["conversations"] == 0
 
 
 def test_profile_and_explicit_memory_controls(client):

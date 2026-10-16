@@ -21,11 +21,12 @@ Open `http://localhost:8766` if the browser does not open automatically. Keep th
 
 ## What you get
 
-- A deliberately simple browser chat with multiline input, saved conversations, and a profile editor.
-- One coaching service and one provider interface. Each successful live exchange makes one model request.
-- A general fitness and healthy habits prompt you can adapt to your app's approach.
+- A guided fitness home: choose movement, strength, fueling, recovery, or habits, then describe the next step you need.
+- Editable requests, conversational follow-ups, saved guidance, and a profile editor.
+- One OpenRouter connection and one selected model. Each generated live reply makes one model request.
+- A permanent fitness and healthy habits scope, with focused coaching instructions you can adapt.
 - Small validated domain models and a local SQLite storage example.
-- Explicit conversation context, New conversation, and confirmed history/profile resets.
+- Explicit conversation context, a fresh-start control, and confirmed history/profile resets.
 - Offline tests, a dependency lockfile, a buildable Python package, and GitHub CI configuration.
 
 This is a local, single-user starter. Features such as habit tracking, workout logging, dashboards, file retrieval, multiple coaches, accounts, and public hosting are extension work. The original gamesCoach competition workflow and PDF system are not bundled.
@@ -50,11 +51,12 @@ To build an independent project, clone into your own folder, change the Git remo
 
 ## Optional live coaching
 
-The included adapter supports **OpenAI** or **OpenRouter** through their chat-completions endpoints. Set one provider, an exact model ID available to your account, and that provider's API key. The app does not switch models or endpoints, or retry paid requests automatically. OpenRouter handles its upstream routing according to its service and account settings.
+**OpenRouter is the only included live connection.** Choose a model available to your OpenRouter account and use an OpenRouter API key. There is no dual-coach discussion or separate OpenAI/Gemini key setup. OpenFitKit sends one generation request per accepted coaching turn and does not retry paid requests automatically. OpenRouter handles upstream routing according to its service and your account settings.
 
 ```bash
 cp .env.example .env
-# Edit .env locally: choose openai or openrouter, then set its model and key.
+# Edit .env locally: set OPENFITKIT_PROVIDER=openrouter,
+# OPENFITKIT_MODEL to your chosen publisher/model ID, and OPENROUTER_API_KEY.
 uv run --env-file .env openfitkit
 ```
 
@@ -62,13 +64,17 @@ uv run --env-file .env openfitkit
 
 | Variable | Default / meaning |
 | --- | --- |
-| `OPENFITKIT_PROVIDER` | `demo`; choose `openai` or `openrouter` for live requests |
-| `OPENFITKIT_MODEL` | Required for live mode; use the provider's exact supported model ID |
-| `OPENFITKIT_API_KEY` | Required for live mode; read by Python, never exposed to the browser |
+| `OPENFITKIT_PROVIDER` | `demo`; choose `openrouter` for live requests |
+| `OPENFITKIT_MODEL` | Required for live mode; exact OpenRouter `publisher/model` ID, including any supported alias |
+| `OPENROUTER_API_KEY` | Required for live mode; read by Python, never exposed to the browser |
 | `OPENFITKIT_DATA_DIR` | Private app directory outside the checkout |
 | `OPENFITKIT_PORT` | `8766` |
 
-Live requests send your profile and the selected current conversation to the chosen provider, with usage billed through that provider account. OpenRouter requests use your OpenRouter key and balance. Web subscriptions and existing credits with other providers are separate. Tests use mocks, so passing tests do not establish live account access or model availability.
+Choose and check your model at [OpenRouter's model catalog](https://openrouter.ai/models). Live requests send your profile, selected fitness focus, and current conversation context to OpenRouter; usage is billed through your OpenRouter balance. Web subscriptions and existing credits with other providers are separate. Tests use mocks, so passing tests do not establish live account access or model availability.
+
+For existing installations, `OPENFITKIT_API_KEY` remains a fallback only when you explicitly choose `openrouter`; `OPENROUTER_API_KEY` takes precedence. Use an OpenRouter key for either variable. The former `openai` provider is rejected with migration instructions rather than silently changing where your data goes. Saved conversations from another provider or model remain readable; start fresh to use a different connection.
+
+The coach stays within fitness and healthier daily habits. A small local guard redirects clearly unrelated tasks before an API call, and the shared coaching prompt handles broader scope decisions and requests for clarification. These controls reduce scope drift; they are not a guarantee of model behavior or a substitute for reviewing generated advice.
 
 ## Context and local data
 
@@ -76,11 +82,11 @@ A new conversation starts with your **current saved profile and no previous conv
 
 There is no inferred cross-chat memory, model training, or background summarization. Edit the profile to change the lasting context supplied on future requests. Input is limited to 8,000 characters; longer pasted text stays in the composer and is blocked from sending until shortened. Enter sends; Shift+Enter adds a line.
 
-Use **Local memory** to choose:
+Use **Your data** for memory controls, and **Saved guidance** to reopen a session:
 
 | Action | Effect |
 | --- | --- |
-| New conversation | Keep saved data; start without another thread's messages |
+| Start fresh | Keep saved data; start without another thread's messages |
 | Clear conversations | Delete all conversation records and keep the profile |
 | Clear all local data | Delete conversation records and reset the profile |
 
